@@ -67,9 +67,9 @@ public class LembreteController {
     // ❌ Excluir lembrete
     @DELETE
     @Path("/{id}")
-    public Response excluirLembrete(@PathParam("id") Integer id, @QueryParam("usuarioId") Integer Id) {
+    public Response excluirLembrete(@PathParam("id") Integer id, @QueryParam("usuarioId") Integer usuarioId) {
         try {
-            boolean sucesso = lembreteService.excluirLembrete(id);
+            boolean sucesso = lembreteService.excluirLembrete(id, usuarioId);
             if (sucesso) {
                 return Response.ok().entity("{\"mensagem\": \"Lembrete excluído com sucesso.\"}").build();
             } else {

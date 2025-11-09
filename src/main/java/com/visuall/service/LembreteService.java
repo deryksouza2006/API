@@ -29,24 +29,13 @@ public class LembreteService {
 
         LembretePessoal lembrete = new LembretePessoal();
         lembrete.setTitulo(request.getTitulo());
-        lembrete.setNomeMedico(request.getNomeMedico());
-        lembrete.setEspecialidade(request.getEspecialidade());
-        lembrete.setLocal(request.getLocalConsulta());
+
         lembrete.setDataConsulta(request.getDataConsulta());
-
-        // ✅ CORREÇÃO: Converter horaConsulta corretamente
-        if (request.getHoraConsulta() != null) {
-            String horaStr = request.getHoraConsulta().toString();
-            if (!horaStr.contains(":")) {
-                horaStr += ":00"; // Adiciona segundos se não tiver
-            }
-            lembrete.setHoraConsulta(LocalTime.parse(horaStr));
-        }
-
+        lembrete.setHoraCompromisso(LocalTime.parse(request.getHoraConsulta() + ":00"));
         lembrete.setObservacoes(request.getObservacoes());
+        lembrete.setIdPaciente(request.getUsuarioId());
         lembrete.setAtivo(true);
         lembrete.setEnviado("N");
-        lembrete.setIdPaciente(request.getUsuarioId()); // ✅ CORREÇÃO: Definir ID do usuário
 
         Integer id = lembreteDAO.create(lembrete);
         if (id == null || id == -1) {
@@ -65,27 +54,12 @@ public class LembreteService {
         }
 
         existente.setTitulo(request.getTitulo());
-        existente.setNomeMedico(request.getNomeMedico());
-        existente.setEspecialidade(request.getEspecialidade());
-        existente.setLocal(request.getLocalConsulta());
         existente.setDataConsulta(request.getDataConsulta());
-
-        // ✅ CORREÇÃO: Converter horaConsulta corretamente
-        if (request.getHoraConsulta() != null) {
-            String horaStr = request.getHoraConsulta().toString();
-            if (!horaStr.contains(":")) {
-                horaStr += ":00";
-            }
-            existente.setHoraConsulta(LocalTime.parse(horaStr));
-        }
-
+        existente.setHoraCompromisso(LocalTime.parse(request.getHoraConsulta() + ":00"));
         existente.setObservacoes(request.getObservacoes());
         existente.setAtivo(true);
 
-        boolean atualizado = lembreteDAO.update(existente);
-        if (!atualizado) {
-            throw new BusinessException("Erro ao atualizar lembrete");
-        }
+        lembreteDAO.update(existente);
 
         return lembreteDAO.readByIdDTO(id);
     }
@@ -103,33 +77,19 @@ public class LembreteService {
         return lembreteDAO.update(lembrete);
     }
 
-    // ❌ Excluir lembrete - ✅ CORREÇÃO: Remover usuarioId do parâmetro
+    // ❌ Excluir lembrete
     @Transactional
-    public boolean excluirLembrete(Integer id) {
-        return lembreteDAO.delete(id);
+    public boolean excluirLembrete(Integer id, Integer usuarioId) {
+        return lembreteDAO.delete(id, usuarioId);
     }
 
-    // 🔍 Listar lembretes por usuário - ✅ CORREÇÃO: Usar método DTO
+    // 🔍 Listar lembretes por usuário
     public List<LembreteResponseDTO> listarPorUsuario(Integer usuarioId) {
-        return lembreteDAO.listByUsuarioDTO(usuarioId);
+        return lembreteDAO.readByPacienteId(usuarioId);
     }
 
-    // 🔍 Listar lembretes ativos - ✅ CORREÇÃO: Usar método DTO
+    // 🔍 Listar lembretes ativos
     public List<LembreteResponseDTO> listarAtivos(Integer usuarioId) {
-        return lembreteDAO.buscarAtivosPorPacienteDTO(usuarioId);
-    }
-
-    // ✅ MÉTODO ADICIONAL: Buscar lembrete por ID
-    public LembreteResponseDTO buscarPorId(Integer id) {
-        LembreteResponseDTO lembrete = lembreteDAO.readByIdDTO(id);
-        if (lembrete == null) {
-            throw new BusinessException("Lembrete não encontrado");
-        }
-        return lembrete;
-    }
-
-    // ✅ MÉTODO ADICIONAL: Listar todos os lembretes
-    public List<LembreteResponseDTO> listarTodos() {
-        return lembreteDAO.findAllDTO();
+        return lembreteDAO.buscarAtivosPorPaciente(usuarioId);
     }
 }
